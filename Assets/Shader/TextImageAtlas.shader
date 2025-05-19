@@ -3,6 +3,7 @@ Shader "Custom/TextImageAtlas"
     Properties
     {
         _MainTex ("Atlas Texture", 2D) = "white" {}
+        _MainTex_ST1 ("Texture ST", Vector) = (1,1,0,0)
         _Color ("Tint Color", Color) = (1,1,1,1)
         _Type1 ("Render Type (0=文字 1=图片)", Int) = 0
     }
@@ -46,6 +47,7 @@ Shader "Custom/TextImageAtlas"
 
             UNITY_INSTANCING_BUFFER_START(Props)
             UNITY_DEFINE_INSTANCED_PROP(int, _Type1)
+            UNITY_DEFINE_INSTANCED_PROP(float4, _MainTex_ST1)
             UNITY_INSTANCING_BUFFER_END(Props)
 
             v2f vert (appdata v)
@@ -54,7 +56,8 @@ Shader "Custom/TextImageAtlas"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_TRANSFER_INSTANCE_ID(v, o);
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                float4 st = UNITY_ACCESS_INSTANCED_PROP(Props, _MainTex_ST1);
+                o.uv = v.uv * st.xy + st.zw; // 应用实例化的ST变换
                 return o;
             }
 
