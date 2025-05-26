@@ -9,7 +9,7 @@ public class AtlasRender : MonoBehaviour
 
     private MaterialPropertyBlock propertyBlock;
     private MeshRenderer meshRenderer;
-    private static readonly int MainTexSt1 = Shader.PropertyToID("_MainTex_ST1");
+    private static readonly int MainTexSt1 = Shader.PropertyToID("_Atlas_ST1");
 
     void Start()
     {

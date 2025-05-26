@@ -106,6 +106,14 @@ namespace TMPro.EditorUtilities
             new GUIContent("R", "Right"),
             new GUIContent("T", "Top")
         };
+        
+        protected static GUIContent[] s_ST =
+        {
+            new GUIContent("tiling", "Left"),
+            new GUIContent("tiling", "Bottom"),
+            new GUIContent("offset", "Right"),
+            new GUIContent("offset", "Top")
+        };
 
         protected static GUIContent[] s_CullingTypeLabels =
         {
@@ -425,6 +433,19 @@ namespace TMPro.EditorUtilities
             if (EndProperty())
             {
                 property.floatValue = value;
+            }
+        }
+        
+        protected void DoInt(string name, string label)
+        {
+            MaterialProperty property = BeginProperty(name);
+            Rect rect = EditorGUILayout.GetControlRect();
+            rect.width = EditorGUIUtility.labelWidth + 55f;
+            s_TempLabel.text = label;
+            int value = EditorGUI.IntField(rect, s_TempLabel, property.intValue);
+            if (EndProperty())
+            {
+                property.intValue = value;
             }
         }
 

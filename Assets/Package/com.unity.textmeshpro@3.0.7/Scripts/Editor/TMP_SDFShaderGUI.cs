@@ -59,6 +59,7 @@ namespace TMPro.EditorUtilities
 
         protected override void DoGUI()
         {
+            DoAtlasTexture();
             s_Face = BeginPanel("Face", s_Face);
             if (s_Face)
             {
@@ -190,6 +191,13 @@ namespace TMPro.EditorUtilities
             }
 
             EndPanel();
+        }
+        private void DoAtlasTexture()
+        {
+            DoTexture2D("_AtlasTex","Texture",false);
+            DoVector("_Atlas_ST1","ST",s_ST);
+            DoColor("_AtlasColor","color");
+            DoFloat("_Type1", "render Type");
         }
 
         void DoFacePanel()

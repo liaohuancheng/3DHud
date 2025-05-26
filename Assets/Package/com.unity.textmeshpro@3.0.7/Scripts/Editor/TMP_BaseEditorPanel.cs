@@ -168,6 +168,7 @@ namespace TMPro.EditorUtilities
         protected SerializedProperty m_MarginProp;
 
         protected SerializedProperty m_ColorModeProp;
+        protected SerializedProperty m_Type;
 
         protected bool m_HavePropertiesChanged;
 

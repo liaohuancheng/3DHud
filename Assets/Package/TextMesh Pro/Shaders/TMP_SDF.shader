@@ -1,6 +1,11 @@
 Shader "TextMeshPro/Distance Field" {
 
 Properties {
+	_AtlasTex ("Atlas Texture", 2D) = "white" {}
+	_Atlas_ST1 ("Atlas ST", Vector) = (1,1,0,0)
+	_AtlasColor ("Tint Color", Color) = (1,1,1,1)
+	_Type1 ("Render Type (0=图片 1=文字)", Float) = 1
+	
 	_FaceTex			("Face Texture", 2D) = "white" {}
 	_FaceUVSpeedX		("Face UV Speed X", Range(-5, 5)) = 0.0
 	_FaceUVSpeedY		("Face UV Speed Y", Range(-5, 5)) = 0.0
@@ -135,7 +140,9 @@ SubShader {
 			float2	texcoord0		: TEXCOORD0;
 			float2	texcoord1		: TEXCOORD1;
 		};
-
+// Used by Unity internally to handle Texture Tiling and Offset.
+float4 _FaceTex_ST;
+float4 _OutlineTex_ST;
 
 		struct pixel_t {
 			UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -152,12 +159,10 @@ SubShader {
 			fixed4	underlayColor	: COLOR1;
 		#endif
 			float4 textures			: TEXCOORD5;
+			float4 atlasuv			: TEXCOORD6;
 		};
 
-		// Used by Unity internally to handle Texture Tiling and Offset.
-		float4 _FaceTex_ST;
-		float4 _OutlineTex_ST;
-
+		
 		pixel_t VertShader(vertex_t input)
 		{
 			pixel_t output;
@@ -215,11 +220,12 @@ SubShader {
 			float2 textureUV = UnpackUV(input.texcoord1.x);
 			float2 faceUV = TRANSFORM_TEX(textureUV, _FaceTex);
 			float2 outlineUV = TRANSFORM_TEX(textureUV, _OutlineTex);
-
-
+			
 			output.position = vPosition;
 			output.color = input.color;
 			output.atlas =	input.texcoord0;
+			float4 st = _Atlas_ST1;
+			output.atlas = output.atlas *st.xy + st.zw;
 			output.param =	float4(alphaClip, scale, bias, weight);
 			output.mask = half4(vert.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_MaskSoftnessX, _MaskSoftnessY) + pixelSize.xy));
 			output.viewDir =	mul((float3x3)_EnvMatrix, _WorldSpaceCameraPos.xyz - mul(unity_ObjectToWorld, vert).xyz);
@@ -228,6 +234,8 @@ SubShader {
 			output.underlayColor =	underlayColor;
 			#endif
 			output.textures = float4(faceUV, outlineUV);
+			
+			
 
 			return output;
 		}
@@ -304,8 +312,8 @@ SubShader {
 		#if UNITY_UI_ALPHACLIP
 			clip(faceColor.a - 0.001);
 		#endif
-
-  		return faceColor * input.color.a;
+		faceColor = lerp(faceColor, tex2D(_AtlasTex, input.atlas), 1 - _Type1);
+  		return faceColor;
 		}
 
 		ENDCG
