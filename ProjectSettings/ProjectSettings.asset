@@ -162,6 +162,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
+    Android: com.DefaultCompany.3DHUD
     Standalone: com.DefaultCompany.3DHUD
   buildNumber:
     Standalone: 0
