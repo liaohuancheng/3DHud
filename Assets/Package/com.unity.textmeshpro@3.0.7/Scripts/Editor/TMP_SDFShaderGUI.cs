@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityEngine.Rendering;
 
 namespace TMPro.EditorUtilities
 {
@@ -13,7 +14,6 @@ namespace TMPro.EditorUtilities
             s_FaceUVSpeedName = { "_FaceUVSpeed" },
             s_FaceUvSpeedNames = { "_FaceUVSpeedX", "_FaceUVSpeedY" },
             s_OutlineUvSpeedNames = { "_OutlineUVSpeedX", "_OutlineUVSpeedY" };
-
         static TMP_SDFShaderGUI()
         {
             s_OutlineFeature = new ShaderFeature()
@@ -60,6 +60,7 @@ namespace TMPro.EditorUtilities
         protected override void DoGUI()
         {
             DoAtlasTexture();
+            DoBlendMode();
             s_Face = BeginPanel("Face", s_Face);
             if (s_Face)
             {
@@ -192,6 +193,115 @@ namespace TMPro.EditorUtilities
 
             EndPanel();
         }
+        
+        private enum BlendPreset
+        {
+            Opaque,
+            AlphaBlend,
+            Additive,
+            Multiply,
+            Custom
+        }
+        
+        private static readonly GUIContent[] BlendModePresets =
+        {
+            new GUIContent("Opaque"),
+            new GUIContent("Alpha Blend"),
+            new GUIContent("Additive"),
+            new GUIContent("Multiply"),
+            new GUIContent("Custom")
+        };
+        
+        private void DoBlendMode()
+        {
+            BlendPreset blendPreset = GetCurrentBlendPreset(m_Material);
+        
+            EditorGUI.BeginChangeCheck();
+            blendPreset = (BlendPreset)EditorGUILayout.Popup(new GUIContent("Blend Mode"), (int)blendPreset, BlendModePresets);
+        
+            if (EditorGUI.EndChangeCheck())
+            {
+                ApplyBlendPreset(m_Material, blendPreset);
+            }
+        
+            // 如果是自定义模式，显示详细参数
+            if (blendPreset == BlendPreset.Custom)
+            {
+                EditorGUI.indentLevel++;
+                MaterialProperty srcBlend = FindProperty("_SrcBlend", m_Properties);
+                MaterialProperty dstBlend = FindProperty("_DstBlend", m_Properties);
+                MaterialProperty blendOp = FindProperty("_BlendOp", m_Properties);
+            
+                m_Editor.ShaderProperty(srcBlend, "Source Blend");
+                m_Editor.ShaderProperty(dstBlend, "Destination Blend");
+                m_Editor.ShaderProperty(blendOp, "Blend Operation");
+                EditorGUI.indentLevel--;
+            }
+        }
+        
+        private void ApplyBlendPreset(Material material, BlendPreset preset)
+        {
+            switch (preset)
+            {
+                case BlendPreset.Opaque:
+                    material.SetFloat("_SrcBlend", (float)BlendMode.One);
+                    material.SetFloat("_DstBlend", (float)BlendMode.Zero);
+                    material.SetFloat("_BlendOp", (float)BlendOp.Add);
+                    material.SetFloat("_ZWrite", 1);
+                    material.renderQueue = (int)RenderQueue.Geometry;
+                    break;
+                
+                case BlendPreset.AlphaBlend:
+                    material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+                    material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                    material.SetFloat("_BlendOp", (float)BlendOp.Add);
+                    material.SetFloat("_ZWrite", 0);
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
+                
+                case BlendPreset.Additive:
+                    material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+                    material.SetFloat("_DstBlend", (float)BlendMode.One);
+                    material.SetFloat("_BlendOp", (float)BlendOp.Add);
+                    material.SetFloat("_ZWrite", 0);
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
+                
+                case BlendPreset.Multiply:
+                    material.SetFloat("_SrcBlend", (float)BlendMode.DstColor);
+                    material.SetFloat("_DstBlend", (float)BlendMode.Zero);
+                    material.SetFloat("_BlendOp", (float)BlendOp.Add);
+                    material.SetFloat("_ZWrite", 0);
+                    material.renderQueue = (int)RenderQueue.Transparent;
+                    break;
+            }
+        }
+        
+        private BlendPreset GetCurrentBlendPreset(Material material)
+        {
+            int srcBlend = (int)material.GetFloat("_SrcBlend");
+            int dstBlend = (int)material.GetFloat("_DstBlend");
+            int blendOp = (int)material.GetFloat("_BlendOp");
+        
+            // Opaque
+            if (srcBlend == (int)BlendMode.One && dstBlend == (int)BlendMode.Zero && blendOp == (int)BlendOp.Add)
+                return BlendPreset.Opaque;
+        
+            // Alpha Blend
+            if (srcBlend == (int)BlendMode.SrcAlpha && dstBlend == (int)BlendMode.OneMinusSrcAlpha && blendOp == (int)BlendOp.Add)
+                return BlendPreset.AlphaBlend;
+        
+            // Additive
+            if (srcBlend == (int)BlendMode.SrcAlpha && dstBlend == (int)BlendMode.One && blendOp == (int)BlendOp.Add)
+                return BlendPreset.Additive;
+        
+            // Multiply
+            if (srcBlend == (int)BlendMode.DstColor && dstBlend == (int)BlendMode.Zero && blendOp == (int)BlendOp.Add)
+                return BlendPreset.Multiply;
+        
+            return BlendPreset.Custom;
+        }
+        
         private void DoAtlasTexture()
         {
             DoTexture2D("_AtlasTex","Texture",false);

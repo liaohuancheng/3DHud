@@ -12,19 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bf11b2d8b26d5d4083790cad12e64af, type: 3}
   m_Name: NewAtlas_Data
   m_EditorClassIdentifier: 
-  atlasTexture: {fileID: 2800000, guid: 8845643f653360a4aaa56073a3d8e6a5, type: 3}
+  atlasTexture: {fileID: 0}
   textureInfos:
-  - name: ICON_+
+  - name: pk
     uvRect:
       serializedVersion: 2
       x: 0
       y: 0
       width: 0.5
-      height: 1
-  - name: xxyd_d_-
+      height: 0.25
+  - name: team
     uvRect:
       serializedVersion: 2
-      x: 0.515625
-      y: 0
-      width: 0.2734375
-      height: 0.5
+      x: 0
+      y: 0.2578125
+      width: 0.5
+      height: 0.25
